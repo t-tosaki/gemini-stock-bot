@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from dotenv import load_dotenv
+load_dotenv()
 
 from stock import get_market_conditions, get_stock_info
 from news import get_economic_news
@@ -11,8 +12,6 @@ from gemini import generate_content
 PROJECT_ROOT = Path(__file__).parent.parent
 TICKERS_FILE = PROJECT_ROOT / "config" / "tickers.json"
 MARKDOWN_TEMPLATE = PROJECT_ROOT / "config" / "template.md"
-
-load_dotenv()
 
 def build_system_instruction() -> str:
     with open(MARKDOWN_TEMPLATE, "r") as f:
@@ -48,12 +47,16 @@ if __name__ == "__main__":
 
     system_instruction = build_system_instruction()
 
+    print("--- get_economic_news")
     economic_news = get_economic_news()
+    print("--- get_market_conditions")
     market_conditions = get_market_conditions()
 
     for ticker in tickers:
+        print(f"--- get_stock_info {ticker}")
         stock_info = get_stock_info(ticker)
 
+        print("--- generate_content")
         response = generate_content(
             contents=build_prompt({
                 "economic_news": economic_news,
@@ -63,4 +66,5 @@ if __name__ == "__main__":
             config={"system_instruction": system_instruction}
         )
 
+        print("--- send_markdown")
         send_markdown(response)
